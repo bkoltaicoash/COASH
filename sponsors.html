@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>COASH — Sponsors</title>
+
+  <!-- Reuse your PWA + styles -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#083c74">
+  <link rel="icon" href="COASH.png">
+  <link rel="apple-touch-icon" href="COASH.png">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="sticky">
+    <img src="COASH.png" alt="COASH Logo" class="logo" />
+    <h1>Confederation of Almaty Schools<br>and Head Teachers</h1>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a aria-current="page" href="sponsors.html">Sponsors</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main style="max-width:1100px;margin:24px auto 48px;padding:0 16px;">
+    <section id="sponsors" class="contact-section">
+      <h2>COASH Sponsors</h2>
+      <p>Thank you to our partners for supporting interschool athletics in Almaty.</p>
+
+      <div class="contact-grid">
+        <!-- Sponsor card 1 -->
+        <div class="contact-card">
+          <h3>Almaty Sports Foundation</h3>
+          <p>Official League Partner</p>
+          <p><a href="https://example.com" target="_blank" rel="noopener">example.com</a></p>
+          <p>Contact: <a href="mailto:partners@example.com">partners@example.com</a></p>
+        </div>
+
+        <!-- Sponsor card 2 -->
+        <div class="contact-card">
+          <h3>BluePeak Fitness</h3>
+          <p>Training & Conditioning Sponsor</p>
+          <p><a href="https://example.org" target="_blank" rel="noopener">example.org</a></p>
+          <p>Contact: <a href="mailto:info@example.org">info@example.org</a></p>
+        </div>
+
+        <!-- Sponsor card 3 -->
+        <div class="contact-card">
+          <h3>City Medical Center</h3>
+          <p>Sports Medicine Partner</p>
+          <p><a href="https://example.kz" target="_blank" rel="noopener">example.kz</a></p>
+          <p>Contact: <a href="mailto:care@example.kz">care@example.kz</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 COASH — Confederation of Almaty Schools and Head Teachers</p>
+  </footer>
+
+  <button class="back-to-top" onclick="scrollTo({ top: 0, behavior: 'smooth' })" style="display:none">↑ Top</button>
+
+  <script>
+    // show/hide back-to-top on scroll
+    const back = document.querySelector('.back-to-top');
+    window.addEventListener('scroll', ()=>{ back.style.display = window.scrollY > 400 ? 'block' : 'none'; }, {passive:true});
+    // PWA SW (optional; harmless if already registered on index)
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+  </script>
+</body>
+</html>

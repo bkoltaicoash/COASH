@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COASH Contacts</title>
+
+  <!-- Site assets / theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#083c74">
+  <link rel="icon" href="COASH.png">
+  <link rel="apple-touch-icon" href="COASH.png">
+
+  <!-- Your main stylesheet (keeps header/nav look) -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Inline card styles to guarantee the card look -->
+  <style>
+    /* ======== COASH CARD STYLE (Restored) ======== */
+    main { max-width: 1100px; margin: 24px auto 48px; padding: 0 16px; }
+
+    .card-section {
+      background: #f9fbff;
+      border: 1px solid #dce3f0;
+      border-radius: 12px;
+      padding: 24px 20px 32px;
+      margin-top: 24px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .card-section h2 {
+      color: #083c74;
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+    .card-section > p {
+      color: #333;
+      margin: 0 0 26px;
+      font-size: 1rem;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .contact-card {
+      background: #fff;
+      border: 1px solid #d4ddec;
+      border-radius: 10px;
+      padding: 18px 16px;
+      text-align: center;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+    .contact-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+    }
+    .contact-card h3 {
+      color: #083c74;
+      margin-bottom: 6px;
+      font-size: 1.15rem;
+    }
+    .contact-card p {
+      margin: 4px 0;
+      color: #444;
+      font-size: 0.95rem;
+    }
+    .contact-card a {
+      color: #083c74;
+      font-weight: 600;
+      text-decoration: none;
+      word-break: break-word;
+    }
+    .contact-card a:hover { text-decoration: underline; }
+
+    footer { text-align: center; color: #666; border-top: 1px solid #eee; padding: 18px 10px; }
+
+    /* Back-to-top button (matches your site) */
+    .back-to-top {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: #083c74;
+      color: #fff;
+      border: 0;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+      display: none;
+    }
+    .back-to-top:hover { filter: brightness(1.1); transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <!-- Site header reused from your theme (style.css provides the look) -->
+  <header class="sticky">
+    <img src="COASH.png" alt="COASH Logo" class="logo" />
+    <h1>COASH League Coordinators</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="sponsors.html">Sponsors</a></li>
+        <li><a aria-current="page" href="contact.html" class="active">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card-section">
+      <h2>COASH League Coordinators</h2>
+      <p>For scheduling, results, or partnership inquiries, please contact your school’s COASH representative below:</p>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <h3>Butch Koltai</h3>
+          <p>Kazakhstan International School (KIS)</p>
+          <p><a href="mailto:bkoltai@kisnet.org">bkoltai@kisnet.org</a></p>
+          <p><a href="https://almaty.kisnet.org/" target="_blank" rel="noopener">almaty.kisnet.org</a></p>
+        </div>
+
+        <div class="contact-card">
+          <h3>Neil French</h3>
+          <p>Haileybury Almaty</p>
+          <p><a href="mailto:nfrench@haileyburyalmaty.kz">nfrench@haileyburyalmaty.kz</a></p>
+          <p><a href="https://www.haileybury.kz/ru/almaty" target="_blank" rel="noopener">haileybury.kz</a></p>
+        </div>
+
+        <div class="contact-card">
+          <h3>Matt Conway</h3>
+          <p>Tien Shan International School</p>
+          <p><a href="mailto:mjconway@eemail.org">mjconway@eemail.org</a></p>
+          <p><a href="https://www.tienshanschool.org/" target="_blank" rel="noopener">tienshanschool.org</a></p>
+        </div>
+
+        <div class="contact-card">
+          <h3>Joey Brown</h3>
+          <p>Almaty International School (AIS)</p>
+          <p><a href="mailto:joey-brown@almaty.qsi.org">joey-brown@almaty.qsi.org</a></p>
+          <p><a href="https://almaty.qsi.org/" target="_blank" rel="noopener">almaty.qsi.org</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 COASH — Confederation of Almaty Schools and Head Teachers</p>
+  </footer>
+
+  <button class="back-to-top" onclick="scrollTo({ top: 0, behavior: 'smooth' })">↑ Top</button>
+
+  <script>
+    // Back-to-top visibility
+    const back = document.querySelector('.back-to-top');
+    window.addEventListener('scroll', () => {
+      back.style.display = window.scrollY > 400 ? 'block' : 'none';
+    }, { passive: true });
+
+    // Optional service worker (keeps parity with the rest of your site)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>

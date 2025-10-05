@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COASH League Central</title>
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- PWA bits -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#083c74">
+  <link rel="icon" href="COASH.png">
+  <link rel="apple-touch-icon" href="COASH.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Small inline styles for the debug bar + tiny helpers -->
+  <style>
+    #debugBar { max-width: 1100px; margin: 8px auto 0; padding: 0 16px }
+    .dbg { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 10px 12px; border-radius: 8px; border: 1px solid }
+    .dbg.ok{background:#e9f7ef;border-color:#b7e1c1;color:#0b6b2e}
+    .dbg.warn{background:#fff7e6;border-color:#ffe1a6;color:#8a5a00}
+    .dbg.err{background:#ffe9e9;border-color:#f3b2b2;color:#a00000}
+    .dbg-details{margin-top:6px;font-size:13px;color:#333}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+    /* small helpers so the filter rows look tidy even without extra CSS */
+    .filter-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .filter-label{font-weight:700;color:#083c74}
+    .active-filters{margin:6px 0 0;color:#444}
+  </style>
+</head>
+
+<body>
+  <!-- ✅ DEBUG STATUS BAR -->
+  <div id="debugBar">
+    <div id="debugMsg" class="dbg warn">
+      Checking CSV sources… (this only shows to help debugging)
+      <div class="dbg-details" id="debugDetails"></div>
+    </div>
+  </div>
+
+  <header class="sticky">
+    <img src="COASH.png" alt="COASH Logo" class="logo" />
+    <h1>Confederation of Almaty Schools<br>and Head Teachers</h1>
+
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a aria-current="page" href="index.html">Home</a></li>
+        <li><a href="sponsors.html">Sponsors</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="year-bar">
+      <label for="yearSelect">Year:</label>
+      <select id="yearSelect">
+        <option value="2025" selected>2025</option>
+      </select>
+    </div>
+
+    <div class="season-selector" id="seasonSelector" aria-label="Season selector">
+      <button class="season active" data-season="1">
+        Season 1<br><span>Football & Cross Country</span>
+      </button>
+      <button class="season" data-season="2">
+        Season 2<br><span>Basketball</span>
+      </button>
+      <button class="season" data-season="3">
+        Season 3<br><span>Volleyball</span>
+      </button>
+    </div>
+
+    <div class="sport-selector" id="sportSelector" aria-label="Sport selector">
+      <button class="sport-chip" data-sport="Football">Football</button>
+      <button class="sport-chip" data-sport="Cross Country">Cross Country</button>
+      <button class="sport-chip" data-sport="Basketball">Basketball</button>
+      <button class="sport-chip" data-sport="Volleyball">Volleyball</button>
+    </div>
+  </header>
+
+  <!-- Division chips -->
+  <nav class="divisions" id="divisionsBar" aria-label="Division selector">
+    <button class="chip active" data-div="">All</button>
+    <button class="chip" data-div="U19">U19</button>
+    <button class="chip" data-div="U15">U15</button>
+    <button class="chip" data-div="U13">U13</button>
+    <button class="chip" data-div="U11">U11</button>
+    <button class="chip" data-div="U9">U9</button>
+  </nav>
+
+  <main>
+    <!-- ===== FIXTURES ===== -->
+    <section id="fixtures">
+      <h2>Fixtures</h2>
+      <p id="fixturesSubtitle" style="margin-top:-6px;color:#444;">All Future Fixtures</p>
+
+      <div class="sport-selector" id="windowSelector" style="margin-top:8px">
+        <button class="view-chip" data-window="week">This Week</button>
+        <button class="view-chip active" data-window="all">All Future</button>
+      </div>
+
+      <!-- School filter (fixtures/standings) -->
+      <div class="filter-row">
+        <span class="filter-label">Filter by School:</span>
+        <nav class="divisions slim" id="schoolsBar" aria-label="School selector"></nav>
+      </div>
+
+      <p id="activeFilters" class="active-filters" aria-live="polite"></p>
+
+      <div id="fixturesTable" style="margin-top:10px">Loading…</div>
+    </section>
+
+    <!-- ===== STANDINGS ===== -->
+    <section id="standings">
+      <h2>Standings</h2>
+      <div id="standingsTable">Loading…</div>
+    </section>
+
+    <!-- ===== RESULTS ===== -->
+    <section id="results">
+      <h2>Results</h2>
+
+      <!-- view toggle -->
+      <div class="sport-selector" id="resultsWindowSelector" style="margin-top:8px">
+        <button class="view-chip active" data-window="all">All Results</button>
+        <button class="view-chip" data-window="week">This Week</button>
+      </div>
+
+      <!-- 🔵 Results filter line 1: School -->
+      <div class="filter-row">
+        <span class="filter-label">Filter by School:</span>
+        <nav class="divisions slim" id="resultsSchoolsBar" aria-label="Results school selector"></nav>
+      </div>
+
+      <!-- 🔵 Results filter line 2: Team (depends on school selection) -->
+      <div class="filter-row">
+        <span class="filter-label">Filter by Team:</span>
+        <nav class="divisions slim" id="teamsBar" aria-label="Team selector"></nav>
+      </div>
+
+      <div id="resultsTable" style="margin-top:10px">Loading…</div>
+    </section>
+
+    <!-- (Optional) Install App button -->
+    <div id="installPrompt" style="display:none; text-align:center; margin:20px;">
+      <button onclick="installPWA()"
+        style="padding:10px 20px; background:#083c74; color:#fff; border:0; border-radius:8px; font-weight:bold; cursor:pointer;">
+        Install COASH App
+      </button>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 COASH — Confederation of Almaty Schools and Head Teachers</p>
+  </footer>
+
+  <button class="back-to-top" onclick="scrollTo({ top: 0, behavior: 'smooth' })" style="display:none">↑ Top</button>
+
+  <!-- ========= EVERYTHING BELOW: LOGIC ========= -->
+  <script>
+    /* ========= CONFIG ========= */
+    const SEASON_SPORTS = {
+      1: ["Football", "Cross Country"],
+      2: ["Basketball"],
+      3: ["Volleyball"]
+    };
+
+    const YEAR_LINKS = {
+      "2025": {
+        results:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLD9m5m0ZEg-ucN-OLyMqc7sw7VKFEHtE1MOgTA0creLD2F7AewEcmf5zuUIJ18YguRLQ7B3dRzxRw/pub?gid=1498727720&single=true&output=csv",
+        standings: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLD9m5m0ZEg-ucN-OLyMqc7sw7VKFEHtE1MOgTA0creLD2F7AewEcmf5zuUIJ18YguRLQ7B3dRzxRw/pub?gid=1445382479&single=true&output=csv",
+        fixtures:  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLD9m5m0ZEg-ucN-OLyMqc7sw7VKFEHtE1MOgTA0creLD2F7AewEcmf5zuUIJ18YguRLQ7B3dRzxRw/pub?gid=32383096&single=true&output=csv"
+      }
+    };
+
+    /* ========= SCHOOL CONFIG ========= */
+    const SCHOOLS = {
+      KIS:  { aliases: ["KIS", "Kazakhstan International School"] },
+      HAL:  { aliases: ["HAL", "Haileybury", "Haileybury Almaty"] },
+      TSIS: { aliases: ["TSIS", "Tien Shan", "Tien Shan International School"] },
+      AIS:  { aliases: ["AIS", "QSI", "Almaty International School"] },
+    };
+    const AUTO_DETECT_SCHOOLS = true;
+
+    /* ========= STATE ========= */
+    const state = {
+      year: "2025",
+      season: 1,
+      sport: "Football",
+      division: "",
+      // Fixtures/Standings
+      window: "all",
+      school: "",
+      // Results
+      resultsWindow: "all",   // 'all' or 'week'
+      resultsSchool: "",      // school filter (line 1)
+      resultsTeam: ""         // team filter (line 2)
+    };
+
+    /* ========= DEBUG UI ========= */
+    const debugMsg = document.getElementById('debugMsg');
+    const debugDetails = document.getElementById('debugDetails');
+    function setDebug(level, html) {
+      debugMsg.classList.remove('ok','warn','err');
+      debugMsg.classList.add(level);
+      debugDetails.innerHTML = html;
+    }
+    function short(u){
+      try{
+        const s = new URL(u);
+        return s.origin + s.pathname + (s.search.includes('gid=') ? `?gid=${new URLSearchParams(s.search).get('gid')}` : '');
+      }catch(e){ return u; }
+    }
+
+    /* ========= CSV (with diagnostics) ========= */
+    async function safeFetch(url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        return { ok:true, text };
+      } catch (e) {
+        return { ok:false, error: String(e) };
+      }
+    }
+    async function fetchCSV_loud(kind, url) {
+      const r = await safeFetch(url);
+      if (!r.ok) {
+        setDebug('err', `
+          <div><strong>${kind}:</strong> <code>${short(url)}</code></div>
+          <div class="dbg-details">❌ Couldn’t load. Likely causes: not published to web (CSV), wrong gid, or network block. Error: <span class="mono">${r.error}</span></div>
+        `);
+        return [];
+      }
+      const rows = parseCSV(r.text);
+      setDebug('ok', `
+        <div>✅ Loaded CSVs. Rows — <strong>Results:</strong> <span id="dbgRes">?</span>,
+             <strong>Standings:</strong> <span id="dbgStd">?</span>,
+             <strong>Fixtures:</strong> <span id="dbgFix">?</span>.
+             Tap chips/season to filter.</div>
+        <div class="dbg-details">If rows show 0, check exact column headers in the sheet: <code>Season, Sport, Division, Date, …</code>.</div>
+      `);
+      return rows;
+    }
+
+    // CSV parser
+    function parseCSV(text){
+      const rows=[]; let cur="", inQ=false, row=[];
+      for (let i=0;i<text.length;i++){
+        const c=text[i], n=text[i+1];
+        if (c === '"' && inQ && n === '"'){ cur+='"'; i++; continue; }
+        if (c === '"'){ inQ=!inQ; continue; }
+        if (c === ',' && !inQ){ row.push(cur); cur=""; continue; }
+        if ((c === '\n' || c === '\r') && !inQ){
+          if (cur.length || row.length){ row.push(cur); rows.push(row); }
+          cur=""; row=[]; continue;
+        }
+        cur += c;
+      }
+      if (cur.length || row.length){ row.push(cur); rows.push(row); }
+      if (!rows.length) return [];
+      const headers = rows[0].map(h=>h.trim());
+      return rows.slice(1).filter(r=>r.length>1).map(r=>{
+        const o={}; headers.forEach((h,i)=>o[h]=(r[i]??"").trim()); return o;
+      });
+    }
+
+    function renderTable(id, cols, rows, emptyMsg){
+      const el = document.getElementById(id);
+      if (!rows.length){ el.innerHTML = `<p>${emptyMsg}</p>`; return; }
+      const thead = `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>`;
+      const tbody = `<tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${r[c] ?? ""}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      el.innerHTML = `<table>${thead}${tbody}</table>`;
+    }
+
+    function matchesSelection(r){
+      return String(r.Season) === String(state.season)
+        && (!state.sport || r.Sport === state.sport)
+        && (!state.division || r.Division === state.division);
+    }
+
+    /* ========= HELPERS ========= */
+    const normalize = s => (s||"").toString().toLowerCase().trim();
+
+    // Schools
+    function schoolAliases(code){ const e=SCHOOLS[code]; return e? e.aliases.map(normalize):[]; }
+    function rowHasSchool(row, code){
+      if (!code) return true;
+      const aliases = schoolAliases(code);
+      if (!aliases.length) return false;
+      const fields = ["Team","Home Team","Away Team","Home","Away"];
+      const hay = fields.map(f=>normalize(row[f])).join(" | ");
+      return aliases.some(a=>a && hay.includes(a));
+    }
+    function buildSchoolSetFromData(allTables){
+      const set = new Set(Object.keys(SCHOOLS));
+      if (!AUTO_DETECT_SCHOOLS) return Array.from(set);
+      const fields = ["Team","Home Team","Away Team","Home","Away"];
+      const grab = row=>{
+        const text = fields.map(f=>row[f]).filter(Boolean).join(" ");
+        const tokens = text.split(/[\s/()\-•,]+/g).filter(Boolean);
+        tokens.forEach(tok=>{
+          const t=tok.trim();
+          if (/^[A-Z]{2,5}$/.test(t) && !SCHOOLS[t]) set.add(t);
+        });
+      };
+      allTables.forEach(tbl=>tbl.forEach(grab));
+      return Array.from(set);
+    }
+    function renderSchoolChips(codes){
+      const bar=document.getElementById("schoolsBar"); if(!bar) return;
+      const cur = state.school || "";
+      const chips = [
+        `<button class="chip ${cur===""?"active":""}" data-school="">All</button>`,
+        ...codes.map(code=>`<button class="chip ${cur===code?"active":""}" data-school="${code}">${code}</button>`)
+      ].join("");
+      bar.innerHTML = chips;
+    }
+    // Results school chips (separate bar)
+    function renderResultsSchoolChips(codes){
+      const bar=document.getElementById("resultsSchoolsBar"); if(!bar) return;
+      const cur = state.resultsSchool || "";
+      const chips = [
+        `<button class="chip ${cur===""?"active":""}" data-rschool="">All</button>`,
+        ...codes.map(code=>`<button class="chip ${cur===code?"active":""}" data-rschool="${code}">${code}</button>`)
+      ].join("");
+      bar.innerHTML = chips;
+    }
+
+    function renderInitialSchoolChips(){ renderSchoolChips(Object.keys(SCHOOLS)); }
+    function renderActiveFilters(){
+      const el=document.getElementById("activeFilters"); if(!el) return;
+      const school = state.school || "All Schools";
+      const sport  = state.sport || "All Sports";
+      const div    = state.division || "All Divisions";
+      const win    = state.window === "all" ? "All Future" : "This Week";
+      el.textContent = `${school} • ${sport} • ${div} • ${win}`;
+    }
+
+    // Dates
+    function toDateObj(d, t){
+      if (!d) return null;
+      let hhmm = (t||"").trim();
+      if (!hhmm) hhmm = "00:00";
+      if (hhmm.length === 4) hhmm = "0" + hhmm; // 9:00 -> 09:00
+      const dt = new Date(`${d}T${hhmm}:00`);
+      return isNaN(dt) ? null : dt;
+    }
+    function startOfToday(){ const n=new Date(); n.setHours(0,0,0,0); return n; }
+
+    // "This Week" = Mon–Sun; on Sunday use NEXT Mon–Sun
+    function weekBoundsFromToday(){
+      const today = startOfToday();
+      const day = today.getDay(); // 0 Sun, 1 Mon...
+      if (day === 0) {
+        const nextMon = new Date(today); nextMon.setDate(today.getDate()+1); nextMon.setHours(0,0,0,0);
+        const nextSun = new Date(nextMon); nextSun.setDate(nextMon.getDate()+6); nextSun.setHours(23,59,59,999);
+        return { start: nextMon, end: nextSun };
+      }
+      const mon = new Date(today); mon.setDate(today.getDate() + (1 - day)); mon.setHours(0,0,0,0);
+      const sun = new Date(mon);   sun.setDate(mon.getDate()+6);          sun.setHours(23,59,59,999);
+      return { start: mon, end: sun };
+    }
+
+    // Teams (for Results filter)
+    function buildTeamSetFromResults(resultsRows){
+      const set = new Set();
+      resultsRows.forEach(r=>{
+        ["Home Team","Away Team","Team"].forEach(k=>{
+          const v=(r[k]||"").trim();
+          if (v) set.add(v);
+        });
+      });
+      return Array.from(set).sort((a,b)=>a.localeCompare(b));
+    }
+    function renderTeamChips(teams){
+      const bar = document.getElementById("teamsBar"); if(!bar) return;
+      const cur = state.resultsTeam || "";
+      const chips = [
+        `<button class="chip ${cur===""?"active":""}" data-team="">All</button>`,
+        ...teams.map(t=>`<button class="chip ${cur===t?"active":""}" data-team="${t}">${t}</button>`)
+      ].join("");
+      bar.innerHTML = chips;
+    }
+    function rowHasTeam(row, team){
+      if (!team) return true;
+      const a = team.trim().toLowerCase();
+      return [row["Home Team"], row["Away Team"], row["Team"]]
+        .some(v => (v||"").trim().toLowerCase() === a);
+    }
+    /* ========= SECTION TITLE UPDATER ========= */
+    // Returns "All Age Group" if no division is selected, otherwise "U19", "U15", etc.
+    function ageLabelFromState() {
+      return state.division ? state.division : "All Age Group";
+    }
+
+    // Rewrites the three H2 titles based on the current division chip
+    function updateSectionTitles() {
+      const label = ageLabelFromState();
+      const targets = {
+        fixtures: document.querySelector("#fixtures h2"),
+        standings: document.querySelector("#standings h2"),
+        results: document.querySelector("#results h2"),
+      };
+
+      Object.keys(targets).forEach((key) => {
+        const h2 = targets[key];
+        if (!h2) return;
+
+        // small fade (works even if no CSS)
+        h2.style.transition = "opacity .18s ease";
+        h2.style.opacity = "0";
+        setTimeout(() => {
+          h2.textContent = `${label} ${key.charAt(0).toUpperCase() + key.slice(1)}`;
+          h2.style.opacity = "1";
+        }, 180);
+      });
+    }
+
+    /* ========= LOAD + RENDER ========= */
+    async function loadAll(){
+      const links = YEAR_LINKS[state.year]; if(!links) return;
+
+      setDebug('warn', `Loading CSVs… <span class="mono">${short(links.results)}</span> · <span class="mono">${short(links.standings)}</span> · <span class="mono">${short(links.fixtures)}</span>`);
+
+      const [results, standings, fixtures] = await Promise.all([
+        fetchCSV_loud('Results', links.results),
+        fetchCSV_loud('Standings', links.standings),
+        fetchCSV_loud('Fixtures', links.fixtures),
+      ]);
+
+      const rC=document.getElementById('dbgRes'); if(rC) rC.textContent=results.length;
+      const sC=document.getElementById('dbgStd'); if(sC) sC.textContent=standings.length;
+      const fC=document.getElementById('dbgFix'); if(fC) fC.textContent=fixtures.length;
+
+      // ===== school chips (fixtures/standings) =====
+      const schoolCodesAll = buildSchoolSetFromData([results, standings, fixtures]);
+      const orderedAll=[...Object.keys(SCHOOLS), ...schoolCodesAll.filter(c=>!SCHOOLS[c])];
+      renderSchoolChips(orderedAll);
+
+      // ===== RESULTS =====
+      const today = startOfToday();
+      const { start: rsStart, end: rsEnd } = weekBoundsFromToday();
+
+      // Build school chips for RESULTS (use results rows only, so chips are relevant)
+      const resultsSchoolCodes = buildSchoolSetFromData([results]);
+      const orderedResultsSchools = [
+        ...Object.keys(SCHOOLS),
+        ...resultsSchoolCodes.filter(c=>!SCHOOLS[c])
+      ];
+      renderResultsSchoolChips(orderedResultsSchools);
+
+      // Narrow results to current Season/Sport/Division
+      let resultsForSel = results.filter(r => matchesSelection(r));
+
+      // Apply RESULTS school filter (line 1)
+      resultsForSel = resultsForSel.filter(r => rowHasSchool(r, state.resultsSchool));
+
+      // Now build team chips from the filtered results so list stays short
+      renderTeamChips(buildTeamSetFromResults(resultsForSel));
+
+      // Finally, apply team + time window
+      const resRows = resultsForSel
+        .map(r => ({ ...r, _dt: toDateObj(r.Date, r.Time) }))
+        .filter(r => r._dt)                          // has date
+        .filter(r => rowHasTeam(r, state.resultsTeam))
+        .filter(r => {
+          if (state.resultsWindow === "week") {
+            return r._dt >= rsStart && r._dt <= rsEnd;
+          }
+          // "All Results" = everything up to today
+          return r._dt <= today;
+        })
+        .sort((a,b)=> b._dt - a._dt); // newest first
+
+      renderTable(
+        "resultsTable",
+        ["Date","Division","Home Team","Away Team","Home Score","Away Score","Venue","Notes"],
+        resRows,
+        state.resultsWindow === "week" ? "No results this week." : "No results found."
+      );
+
+      // ===== STANDINGS =====
+      const stdRows = standings
+        .filter(r => matchesSelection(r) && rowHasSchool(r, state.school))
+        .sort((a,b)=> (Number(b.Points||0) - Number(a.Points||0)));
+      renderTable(
+        "standingsTable",
+        ["Team","W","D","L","GF","GA","GD","Points"],
+        stdRows,
+        "No standings yet for this selection."
+      );
+
+      // ===== FIXTURES =====
+      const { start:wStart, end:wEnd } = weekBoundsFromToday();
+      const fixRows = fixtures
+        .filter(r => matchesSelection(r) && rowHasSchool(r, state.school))
+        .map(r => ({ ...r, _dt: toDateObj(r.Date, r.Time) }))
+        .filter(r => r._dt && (state.window==="week" ? (r._dt>=wStart && r._dt<=wEnd) : (r._dt>=today)))
+        .sort((a,b)=> a._dt - b._dt);
+
+      if (!fixRows.length){
+        const bySeason={};
+        fixtures.forEach(f=>{
+          const s=String(f.Season||"").trim(), sp=String(f.Sport||"").trim();
+          if(!bySeason[s]) bySeason[s]={}; bySeason[s][sp]=(bySeason[s][sp]||0)+1;
+        });
+        const diag = Object.keys(bySeason).sort().map(s=>{
+          const sports=Object.keys(bySeason[s]).map(sp=>`${sp}: ${bySeason[s][sp]}`).join(", ");
+          return `Season ${s} — ${sports}`;
+        }).join(" | ");
+        document.getElementById("fixturesTable").innerHTML =
+          `<p>No upcoming fixtures match your selection.</p>
+           <p style="opacity:.8">Tip: Your sheet has → <strong>${diag || "no parsed fixtures"}</strong>.</p>`;
+      } else {
+        renderTable(
+          "fixturesTable",
+          ["Date","Time","Division","Home Team","Away Team","Venue"],
+          fixRows,
+          state.window==="week" ? "No fixtures this week." : "No upcoming fixtures."
+        );
+      }
+
+      updateFixturesSubtitle(wStart, wEnd);
+      renderActiveFilters();
+    }
+
+    function updateFixturesSubtitle(wStart, wEnd){
+      const el=document.getElementById("fixturesSubtitle"); if(!el) return;
+      if (state.window==="all"){ el.textContent="All Future Fixtures"; }
+      else {
+        const f=d=>d.toISOString().slice(0,10);
+        el.textContent=`This Week (Mon–Sun): ${f(wStart)} → ${f(wEnd)}`;
+      }
+    }
+
+    /* ========= TAPS ========= */
+    function onTap(container, selector, handler){
+      if (!container) return;
+      const fn=(e)=>{
+        const btn=e.target.closest(selector);
+        if (!btn || !container.contains(btn)) return;
+        handler(btn, e);
+      };
+      ["click","touchend","pointerup"].forEach(t=>container.addEventListener(t, fn, {passive:true}));
+    }
+    function setActive(container, selector, activeEl){
+      if (!container) return;
+      container.querySelectorAll(selector).forEach(el=>el.classList.remove("active"));
+      activeEl.classList.add("active");
+    }
+    function updateSportChipsForSeason(){
+      const allowed=SEASON_SPORTS[state.season]||[];
+      document.querySelectorAll(".sport-chip[data-sport]").forEach(chip=>{
+        const show=allowed.includes(chip.dataset.sport);
+        chip.style.display=show?"inline-block":"none";
+        chip.classList.toggle("active", chip.dataset.sport===state.sport);
+      });
+    }
+
+    function wireUI(){
+      document.getElementById("yearSelect").addEventListener("change", e=>{ state.year=e.target.value; loadAll(); });
+
+      const seasonBar=document.getElementById("seasonSelector");
+      onTap(seasonBar, ".season", (btn)=>{
+        setActive(seasonBar, ".season", btn);
+        state.season=Number(btn.dataset.season);
+        const allowed=SEASON_SPORTS[state.season]||[];
+        if (!allowed.includes(state.sport)) state.sport=allowed[0]||"";
+        updateSportChipsForSeason();
+        loadAll();
+      });
+
+      const sportBar=document.getElementById("sportSelector");
+      onTap(sportBar, ".sport-chip[data-sport]", (btn)=>{
+        setActive(sportBar, ".sport-chip[data-sport]", btn);
+        state.sport=btn.dataset.sport; loadAll();
+      });
+
+      const divBar = document.getElementById("divisionsBar");
+      onTap(divBar, ".chip", (btn) => {
+        setActive(divBar, ".chip", btn);
+        state.division = btn.dataset.div || "";
+        updateSectionTitles();  // 🔹 NEW: refresh the H2 headings
+        loadAll();
+      });
+
+
+      const winBar = document.getElementById("windowSelector");
+      onTap(winBar, ".view-chip", (btn) => {
+        setActive(winBar, ".view-chip", btn);
+        state.window = btn.dataset.window;
+        loadAll();
+      });
+
+      // Fixtures/Standings school chips
+      const schBar=document.getElementById("schoolsBar");
+      onTap(schBar, ".chip", (btn)=>{
+        setActive(schBar, ".chip", btn);
+        state.school=btn.dataset.school||""; renderActiveFilters(); loadAll();
+      });
+
+      // 🔵 Results — view toggle
+      const resWin = document.getElementById("resultsWindowSelector");
+      onTap(resWin, ".view-chip", (btn)=>{
+        setActive(resWin, ".view-chip", btn);
+        state.resultsWindow = btn.dataset.window; // 'all' | 'week'
+        loadAll();
+      });
+
+      // 🔵 Results — school chips
+      const resultsSchBar = document.getElementById("resultsSchoolsBar");
+      onTap(resultsSchBar, ".chip", (btn)=>{
+        setActive(resultsSchBar, ".chip", btn);
+        state.resultsSchool = btn.getAttribute("data-rschool") || "";
+        // when school changes, clear team to "All" so parents see something
+        state.resultsTeam = "";
+        loadAll();
+      });
+
+      // 🔵 Results — team chips
+      const teamsBar = document.getElementById("teamsBar");
+      onTap(teamsBar, ".chip", (btn)=>{
+        setActive(teamsBar, ".chip", btn);
+        state.resultsTeam = btn.dataset.team || "";
+        loadAll();
+      });
+
+      const back=document.querySelector(".back-to-top");
+      window.addEventListener("scroll", ()=>{ back.style.display=window.scrollY>400?"block":"none"; }, { passive:true });
+    }
+
+    /* ========= INIT ========= */
+    document.addEventListener("DOMContentLoaded", ()=>{
+      state.season=1;
+      state.sport=SEASON_SPORTS[state.season][0]; // "Football"
+      updateSportChipsForSeason();
+      updateSectionTitles();   // 🔹 ensures titles show correctly on first load
+
+      // show KIS/HAL/TSIS/AIS immediately, expand with auto-detection after load
+      renderInitialSchoolChips();
+
+      wireUI();
+      loadAll();
+
+      if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); }
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); deferredPrompt=e; const p=document.getElementById("installPrompt"); if(p) p.style.display="block"; });
+      window.installPWA = async () => { if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; const p=document.getElementById("installPrompt"); if(p) p.style.display="none"; };
+    });
+  </script>
+</body>
+</html>
