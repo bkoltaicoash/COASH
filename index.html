@@ -18,6 +18,7 @@
 
   <!-- Small inline styles for the debug bar + tiny helpers -->
   <style>
+    #debugBar { display: none !important; }
     #debugBar { max-width: 1100px; margin: 8px auto 0; padding: 0 16px }
     .dbg { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 10px 12px; border-radius: 8px; border: 1px solid }
     .dbg.ok{background:#e9f7ef;border-color:#b7e1c1;color:#0b6b2e}
@@ -30,6 +31,107 @@
     .filter-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
     .filter-label{font-weight:700;color:#083c74}
     .active-filters{margin:6px 0 0;color:#444}
+
+    /* Labeled two-row division chips */
+    .divisions { max-width: 1100px; margin: 10px auto 0; padding: 0 16px; }
+    .divisions-group { margin: 6px 0 10px; }
+    .divisions-label {
+      font-weight: 700; color: #083c74; margin: 4px 0 6px; letter-spacing: .2px;
+      text-transform: none;
+    }
+    .chip-row {
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:.5rem;
+    }
+    .chip{
+      padding:.4rem .9rem;
+      border:1px solid #ccc;
+      border-radius:999px;
+      background:#fff;
+      cursor:pointer;
+      transition:all .2s ease;
+      margin:.1rem .15rem;
+    }
+    .chip:hover{ background:#f0f0f0; }
+    .chip.active{
+      background:#222; color:#fff; border-color:#222;
+    }
+    /* ——— Divisions layout: two groups side-by-side ——— */
+    .divisions { max-width: 1100px; margin: 10px auto 0; padding: 0 16px; }
+
+    .divisions-groups{
+      display:flex;
+      justify-content:space-between;  /* Boys to the left, Girls to the right */
+      align-items:flex-start;
+      gap:2rem;
+      flex-wrap:wrap;                 /* stack on small screens */
+    }
+
+    .divisions-group{ flex:1 1 420px; }
+
+    .divisions-label{
+      font-weight:700; color:#083c74; margin: 4px 0 8px; letter-spacing:.2px;
+    }
+
+    .chip-row{ display:flex; flex-wrap:wrap; gap:.5rem; }
+
+    /* Alignment for each side */
+    .boys  .chip-row{ justify-content:flex-start; }  /* left align */
+    .girls .chip-row{ justify-content:flex-end;   }  /* right align */
+
+    /* Responsive fallback: if screen is narrow, stack and left-align */
+    @media (max-width: 900px){
+      .divisions-groups{ flex-direction:column; gap:1rem; }
+      .girls .chip-row{ justify-content:flex-start; }
+    }
+    /* ——— Divisions layout fix: align Girls titles & chips to left ——— */
+    .divisions {
+      max-width: 1100px;
+      margin: 10px auto 0;
+      padding: 0 16px;
+    }
+
+    .divisions-groups {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+      flex-wrap: wrap; /* stack on small screens */
+    }
+
+    .divisions-group {
+      flex: 1 1 420px;
+    }
+
+    .divisions-label {
+      font-weight: 700;
+      color: #083c74;
+      margin: 4px 0 8px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Chip row spacing and alignment */
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    /* Boys left, Girls now also left-aligned */
+    .boys  .chip-row { justify-content: flex-start; }
+    .girls .chip-row { justify-content: flex-start; }
+
+    /* Responsive stack for smaller screens */
+    @media (max-width: 900px) {
+      .divisions-groups {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .girls .chip-row { justify-content: flex-start; }
+    }
+
   </style>
 </head>
 
@@ -81,15 +183,37 @@
     </div>
   </header>
 
-  <!-- Division chips -->
+  <!-- Division chips (labeled two rows) -->
+  <!-- Division chips (labeled, split left/right) -->
   <nav class="divisions" id="divisionsBar" aria-label="Division selector">
-    <button class="chip active" data-div="">All</button>
-    <button class="chip" data-div="U19">U19</button>
-    <button class="chip" data-div="U15">U15</button>
-    <button class="chip" data-div="U13">U13</button>
-    <button class="chip" data-div="U11">U11</button>
-    <button class="chip" data-div="U9">U9</button>
+    <div class="divisions-groups">
+      <!-- Boys (left) -->
+      <div class="divisions-group boys" aria-label="Boys Divisions">
+        <div class="divisions-label">Boys Divisions</div>
+        <div class="chip-row">
+          <button class="chip" data-div="U19">U19</button>
+          <button class="chip" data-div="U15">U15</button>
+          <button class="chip" data-div="U13">U13</button>
+          <button class="chip" data-div="U11">U11</button>
+          <button class="chip" data-div="U9">U9</button>
+        </div>
+      </div>
+
+      <!-- Girls (right) -->
+      <div class="divisions-group girls" aria-label="Girls Divisions">
+        <div class="divisions-label">Girls Divisions</div>
+        <div class="chip-row">
+          <!-- NOTE: the button TEXT is just U19/U15/…,
+               but data-div keeps the GIRLS value for filtering -->
+          <button class="chip" data-div="U19 Girls">U19</button>
+          <button class="chip" data-div="U15 Girls">U15</button>
+          <button class="chip" data-div="U13 Girls">U13</button>
+          <button class="chip" data-div="U11 Girls">U11</button>
+        </div>
+      </div>
+    </div>
   </nav>
+
 
   <main>
     <!-- ===== FIXTURES ===== -->
@@ -276,10 +400,25 @@
       el.innerHTML = `<table>${thead}${tbody}</table>`;
     }
 
+    /* ====== UPDATED: tolerant Season/Sport + prefix Division ====== */
     function matchesSelection(r){
-      return String(r.Season) === String(state.season)
-        && (!state.sport || r.Sport === state.sport)
-        && (!state.division || r.Division === state.division);
+      // Season: accept "1", "01", "Season 1", "S1"
+      const seasonNum = (val) => {
+        const m = String(val ?? "").match(/\d+/);
+        return m ? parseInt(m[0], 10) : null;
+      };
+      const seasonOK = seasonNum(r.Season) === Number(state.season);
+
+      // Sport: case-insensitive exact
+      const sportOK  = (!state.sport || String(r.Sport||"").trim().toLowerCase() === String(state.sport).toLowerCase());
+
+      if (!seasonOK || !sportOK) return false;
+
+      // Division: exact OR prefix (so "U13 Girls A" matches "U13 Girls")
+      if (!state.division) return true;
+      const want = String(state.division||"").trim().toLowerCase();
+      const got  = String(r.Division||"").trim().toLowerCase();
+      return got === want || got.startsWith(want);
     }
 
     /* ========= HELPERS ========= */
@@ -340,15 +479,39 @@
       el.textContent = `${school} • ${sport} • ${div} • ${win}`;
     }
 
-    // Dates
+    /* ====== UPDATED: robust date parsing ====== */
     function toDateObj(d, t){
       if (!d) return null;
-      let hhmm = (t||"").trim();
-      if (!hhmm) hhmm = "00:00";
-      if (hhmm.length === 4) hhmm = "0" + hhmm; // 9:00 -> 09:00
-      const dt = new Date(`${d}T${hhmm}:00`);
-      return isNaN(dt) ? null : dt;
+      const time = (t || "00:00").trim();
+      // normalize compact times like 930 -> 9:30
+      const hhmm = time.replace(/^(\d{1,2})(\d{2})$/, "$1:$2");
+      const pad  = (n)=> (n<10 ? "0"+n : ""+n);
+
+      // Try ISO-like first (e.g., 2025-10-07)
+      const isoTry = new Date(`${d}T${hhmm.length===4 ? "0"+hhmm : hhmm}:00`);
+      if (!isNaN(isoTry)) return isoTry;
+
+      // Try D/M/Y or M/D/Y (assume D/M/Y when first number > 12)
+      const m = String(d).match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (m){
+        let a = parseInt(m[1],10), b = parseInt(m[2],10), y = parseInt(m[3],10);
+        if (y < 100) y += 2000;
+
+        let dd, mm;
+        if (a > 12) { dd = a; mm = b; }
+        else if (b > 12) { dd = b; mm = a; }
+        else { dd = a; mm = b; } // ambiguous -> assume D/M/Y
+
+        const iso = `${y}-${pad(mm)}-${pad(dd)}T${hhmm.length===4 ? "0"+hhmm : hhmm}:00`;
+        const dt = new Date(iso);
+        if (!isNaN(dt)) return dt;
+      }
+
+      // Last resort
+      const fb = new Date(d);
+      return isNaN(fb) ? null : fb;
     }
+
     function startOfToday(){ const n=new Date(); n.setHours(0,0,0,0); return n; }
 
     // "This Week" = Mon–Sun; on Sunday use NEXT Mon–Sun
@@ -391,13 +554,12 @@
       return [row["Home Team"], row["Away Team"], row["Team"]]
         .some(v => (v||"").trim().toLowerCase() === a);
     }
+
     /* ========= SECTION TITLE UPDATER ========= */
-    // Returns "All Age Group" if no division is selected, otherwise "U19", "U15", etc.
     function ageLabelFromState() {
       return state.division ? state.division : "All Age Group";
     }
 
-    // Rewrites the three H2 titles based on the current division chip
     function updateSectionTitles() {
       const label = ageLabelFromState();
       const targets = {
@@ -410,7 +572,6 @@
         const h2 = targets[key];
         if (!h2) return;
 
-        // small fade (works even if no CSS)
         h2.style.transition = "opacity .18s ease";
         h2.style.opacity = "0";
         setTimeout(() => {
@@ -418,6 +579,28 @@
           h2.style.opacity = "1";
         }, 180);
       });
+    }
+
+    /* ====== NEW: normalize column names ====== */
+    function canon(r){
+      // Create canonical fields used everywhere in the app
+      const c = { ...r };
+      c.Season     = r.Season ?? r["Season #"] ?? r["Season Number"] ?? r["S"] ?? r["season"];
+      c.Sport      = r.Sport ?? r["Game"] ?? r["Sport Name"];
+      c.Division   = r.Division ?? r["Age Group"] ?? r["Div"] ?? r["Group"];
+
+      c.Date       = r.Date ?? r["Match Date"] ?? r["Game Date"] ?? (r["Date/Time"] ? String(r["Date/Time"]).split(" ")[0] : undefined);
+      c.Time       = r.Time ?? r["Kickoff"] ?? r["Start"] ?? r["KO"] ?? (r["Date/Time"] ? String(r["Date/Time"]).split(" ")[1] : undefined);
+
+      c["Home Team"] = r["Home Team"] ?? r["Home"] ?? r["Team Home"] ?? r["Host"];
+      c["Away Team"] = r["Away Team"] ?? r["Away"] ?? r["Team Away"] ?? r["Guest"];
+
+      c["Home Score"] = r["Home Score"] ?? r["Home Goals"] ?? r["Score H"] ?? r["Home Points"];
+      c["Away Score"] = r["Away Score"] ?? r["Away Goals"] ?? r["Score A"] ?? r["Away Points"];
+
+      c.Venue     = r.Venue ?? r.Field ?? r.Pitch ?? r.Court;
+      c.Notes     = r.Notes ?? r.Remarks ?? r.Comment;
+      return c;
     }
 
     /* ========= LOAD + RENDER ========= */
@@ -453,8 +636,8 @@
       ];
       renderResultsSchoolChips(orderedResultsSchools);
 
-      // Narrow results to current Season/Sport/Division
-      let resultsForSel = results.filter(r => matchesSelection(r));
+      // Normalize rows first, then filter by current selection
+      let resultsForSel = results.map(canon).filter(r => matchesSelection(r));
 
       // Apply RESULTS school filter (line 1)
       resultsForSel = resultsForSel.filter(r => rowHasSchool(r, state.resultsSchool));
@@ -471,8 +654,8 @@
           if (state.resultsWindow === "week") {
             return r._dt >= rsStart && r._dt <= rsEnd;
           }
-          // "All Results" = everything up to today
-          return r._dt <= today;
+          // "All Results" = ALL rows (past + future)
+          return true;
         })
         .sort((a,b)=> b._dt - a._dt); // newest first
 
@@ -485,6 +668,7 @@
 
       // ===== STANDINGS =====
       const stdRows = standings
+        .map(canon)
         .filter(r => matchesSelection(r) && rowHasSchool(r, state.school))
         .sort((a,b)=> (Number(b.Points||0) - Number(a.Points||0)));
       renderTable(
@@ -497,6 +681,7 @@
       // ===== FIXTURES =====
       const { start:wStart, end:wEnd } = weekBoundsFromToday();
       const fixRows = fixtures
+        .map(canon)
         .filter(r => matchesSelection(r) && rowHasSchool(r, state.school))
         .map(r => ({ ...r, _dt: toDateObj(r.Date, r.Time) }))
         .filter(r => r._dt && (state.window==="week" ? (r._dt>=wStart && r._dt<=wEnd) : (r._dt>=today)))
@@ -505,7 +690,8 @@
       if (!fixRows.length){
         const bySeason={};
         fixtures.forEach(f=>{
-          const s=String(f.Season||"").trim(), sp=String(f.Sport||"").trim();
+          const c = canon(f);
+          const s=String(c.Season||"").trim(), sp=String(c.Sport||"").trim();
           if(!bySeason[s]) bySeason[s]={}; bySeason[s][sp]=(bySeason[s][sp]||0)+1;
         });
         const diag = Object.keys(bySeason).sort().map(s=>{
@@ -580,14 +766,14 @@
         state.sport=btn.dataset.sport; loadAll();
       });
 
+      // Division chip clicks (both labeled rows)
       const divBar = document.getElementById("divisionsBar");
       onTap(divBar, ".chip", (btn) => {
         setActive(divBar, ".chip", btn);
         state.division = btn.dataset.div || "";
-        updateSectionTitles();  // 🔹 NEW: refresh the H2 headings
+        updateSectionTitles();
         loadAll();
       });
-
 
       const winBar = document.getElementById("windowSelector");
       onTap(winBar, ".view-chip", (btn) => {
@@ -638,7 +824,7 @@
       state.season=1;
       state.sport=SEASON_SPORTS[state.season][0]; // "Football"
       updateSportChipsForSeason();
-      updateSectionTitles();   // 🔹 ensures titles show correctly on first load
+      updateSectionTitles();   // titles reflect selected division
 
       // show KIS/HAL/TSIS/AIS immediately, expand with auto-detection after load
       renderInitialSchoolChips();

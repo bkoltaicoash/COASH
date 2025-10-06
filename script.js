@@ -39,11 +39,14 @@
   /* ========= DEBUG UI ========= */
   const debugMsg = document.getElementById('debugMsg');
   const debugDetails = document.getElementById('debugDetails');
+
+  // 🔕 Disable the green debug banner (hide it and do nothing)
   function setDebug(level, html) {
-    debugMsg.classList.remove('ok','warn','err');
-    debugMsg.classList.add(level);
-    debugDetails.innerHTML = html;
+    const bar = document.getElementById('debugBar');
+    if (bar) bar.style.display = 'none';
+    // Intentionally do nothing else.
   }
+
   function short(u){
     try{
       const s = new URL(u);
@@ -322,6 +325,10 @@
 
   /* ========= INIT ========= */
   document.addEventListener("DOMContentLoaded", ()=>{
+    // Hide the debug banner on first load as well (belt & braces)
+    const bar = document.getElementById('debugBar');
+    if (bar) bar.style.display = 'none';
+
     state.season=1;
     state.sport=SEASON_SPORTS[state.season][0];
     updateSportChipsForSeason();
